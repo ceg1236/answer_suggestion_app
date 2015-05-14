@@ -15,6 +15,7 @@
       'searchHelpCenter.done': 'searchHelpCenterDone',
       'searchWebPortal.done': 'searchWebPortalDone',
       'getBrands.done': 'getBrandsDone',
+      'getCategories.done':'getCategoriesDone',
       'getHcArticle.done': 'getHcArticleDone',
       'getSectionAccessPolicy.done': 'getSectionAccessPolicyDone',
       'settings.done': 'settingsDone',
@@ -56,20 +57,32 @@
         };
       },
 
-      searchHelpCenter: function(query) {
+      searchHelpCenter: function(query, filter) {
+        var currentUser = this.currentAccount();
+
         var locale = this.currentUser().locale(),
             limit =  this.queryLimit(),
             url = this.isMultibrand ? '/api/v2/search.json' : '/api/v2/help_center/articles/search.json',
             finalquery = this.isMultibrand ? 'type:article ' + query : query;
+
         return {
           url: url,
           type: 'GET',
           data: {
             per_page: limit,
             locale:   locale,
-            query:    finalquery
+            query:    finalquery,
+
           }
         };
+      },
+
+      getCategories: function(query) {
+
+        return {
+          url: '/api/v2/help_center/categories.json',
+          type: 'GET',
+        }
       },
 
       searchWebPortal: function(query){
@@ -87,11 +100,11 @@
       }
     },
 
-    search: function(query) {
+    search: function(query, filter) {
       this.switchTo('spinner');
 
       if (this.setting('search_hc')) {
-        this.ajax('searchHelpCenter', query);
+        this.ajax('searchHelpCenter', query, filter);
       } else {
         this.ajax('searchWebPortal', query);
       }
@@ -100,6 +113,7 @@
     created: function() {
       this.isMultibrand = false;
       this.ajax('getBrands');
+      this.ajax('getCategories');
       this.initialize();
     },
 
@@ -152,6 +166,18 @@
       this.brandsInfo = _.object(_.map(data.brands, function(brand) {
         return [brand.name, brand.logo && brand.logo.content_url];
       }));
+    },
+
+    getCategoriesDone: function(data) {
+      var categories = {};
+      for(var i = 0; i < data.categories.length; i++) {
+        categories[i] = data.categories[i].name;
+      }
+      this.$('.custom-search').before(
+        this.renderTemplate('category_template', {categories: categories})
+      );
+      console.log(categories);
+
     },
 
     getHcArticleDone: function(data) {
@@ -262,7 +288,8 @@
 
     processSearchFromInput: function() {
       var query = this.removePunctuation(this.$('.custom-search input').val());
-      if (query && query.length) { this.search(query); }
+      var filter = this.$("#filter").val();
+      if (query && query.length) { this.search(query, filter); }
     },
 
     baseUrl: function(subdomain) {

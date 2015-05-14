@@ -1,0 +1,7 @@
+
+<div class="categories-filter">
+<input type="checkbox">All
+{{#each categories}}
+<input type="checkbox" name="">{{.}}
+{{/each}}
+</div>
