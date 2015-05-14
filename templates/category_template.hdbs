@@ -1,7 +1,14 @@
 
 <div class="categories-filter">
-<input type="checkbox">All
+<!-- <input type="checkbox" name="categories" checked="checked" id="All">All -->
+
+<h5>Category Filter</h5>
+<select id="category-dropdown">
+  <option>All</option>
 {{#each categories}}
-<input type="checkbox" name="">{{.}}
+<!-- <input type="checkbox" name="categories" id="{{this}}">{{.}} -->
+  <option>{{@key}}</option>
+
 {{/each}}
+</select>
 </div>

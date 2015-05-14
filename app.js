@@ -2,6 +2,7 @@
   return {
     defaultState: 'spinner',
     defaultNumberOfEntriesToDisplay: 10,
+    categories: {},
     urlRegex: /^https?:\/\/[^/]+\//,
     zendeskRegex: /^https:\/\/(.*?)\.(?:zendesk|zd-(?:dev|master|staging))\.com\//,
     DEFAULT_LOGO_URL: '/images/logo_placeholder.png',
@@ -58,11 +59,23 @@
       },
 
       searchHelpCenter: function(query, filter) {
+
         var currentUser = this.currentAccount();
+        var url;
+        if (this.isMultibrand) {
+          url = '/api/v2/search.json';
+        } else {
+          url = '/api/v2/help_center/articles/search.json';
+        }
+
+        if (filter === "All") {
+          url = '/api/v2/help_center/articles/search.json';
+        } else {
+          url = '/api/v2/help_center/articles/search.json' + '?query=' + query + '&category=' + this.categories[filter];
+        }
 
         var locale = this.currentUser().locale(),
             limit =  this.queryLimit(),
-            url = this.isMultibrand ? '/api/v2/search.json' : '/api/v2/help_center/articles/search.json',
             finalquery = this.isMultibrand ? 'type:article ' + query : query;
 
         return {
@@ -123,7 +136,7 @@
       }
 
       this.ajax('settings').then(function() {
-        this.search(this.subjectSearchQuery());
+        this.search(this.subjectSearchQuery(), "All");
       }.bind(this));
     },
 
@@ -169,15 +182,13 @@
     },
 
     getCategoriesDone: function(data) {
-      var categories = {};
       for(var i = 0; i < data.categories.length; i++) {
-        categories[i] = data.categories[i].name;
+        var currentCategory = data.categories[i].name;
+        this.categories[currentCategory] = data.categories[i].id;
       }
       this.$('.custom-search').before(
-        this.renderTemplate('category_template', {categories: categories})
+        this.renderTemplate('category_template', {categories: this.categories})
       );
-      console.log(categories);
-
     },
 
     getHcArticleDone: function(data) {
@@ -288,7 +299,7 @@
 
     processSearchFromInput: function() {
       var query = this.removePunctuation(this.$('.custom-search input').val());
-      var filter = this.$("#filter").val();
+      var filter = this.$('#category-dropdown').val();
       if (query && query.length) { this.search(query, filter); }
     },
 
