@@ -3,6 +3,7 @@
     defaultState: 'spinner',
     defaultNumberOfEntriesToDisplay: 10,
     categories: {},
+    access_policy: {},
     urlRegex: /^https?:\/\/[^/]+\//,
     zendeskRegex: /^https:\/\/(.*?)\.(?:zendesk|zd-(?:dev|master|staging))\.com\//,
     DEFAULT_LOGO_URL: '/images/logo_placeholder.png',
@@ -58,7 +59,13 @@
         };
       },
 
-      searchHelpCenter: function(query, filter) {
+      searchHelpCenter: function(query, category) {
+
+        // var whoCanView = this.$('#access-dropdown').val();
+
+        // if (whoCanView !== "Anyone") {
+        //   console.log('restricted view');
+        // }
 
         var currentUser = this.currentAccount();
         var url;
@@ -68,10 +75,10 @@
           url = '/api/v2/help_center/articles/search.json';
         }
 
-        if (filter === "All") {
+        if (category === "All") {
           url = '/api/v2/help_center/articles/search.json';
         } else {
-          url = '/api/v2/help_center/articles/search.json' + '?query=' + query + '&category=' + this.categories[filter];
+          url = '/api/v2/help_center/articles/search.json?query=' + query + '&category=' + this.categories[category];
         }
 
         var locale = this.currentUser().locale(),
@@ -127,6 +134,9 @@
       this.isMultibrand = false;
       this.ajax('getBrands');
       this.ajax('getCategories');
+      this.$('.custom-search').before(
+        this.renderTemplate('access_template')
+      );
       this.initialize();
     },
 
@@ -173,6 +183,7 @@
         this.$('.custom-search').before(
           this.renderTemplate('brand_filter', { options: options })
         );
+
         this.$('.brand-filter').zdSelectMenu();
       }
 
@@ -193,7 +204,6 @@
 
     getHcArticleDone: function(data) {
       var modalContent;
-
       if (data.article && data.article.section_id) {
         this.ajax('getSectionAccessPolicy', data.article.section_id);
       }
@@ -208,11 +218,44 @@
     },
 
     getSectionAccessPolicyDone: function(data) {
-      if (this.isAgentOnlyContent(data)) { this.renderAgentOnlyAlert(); }
+      // var whoCanView;
+      // var sectionsFilteredByAccess = [];
+      // console.log('secFilAcc', sectionsFilteredByAccess);
+      // this.$('#access-dropdown').val() === "Agents and managers" ? whoCanView = 'staff' : whoCanView = 'signed_in_users';
+
+      // // if (this.isAgentOnlyContent(data)) { this.renderAgentOnlyAlert(); }
+      // if (data.access_policy.viewable_by === whoCanView) {
+      //   console.log('access match!');
+      //   return true;
+      // }
+    },
+
+    filterByAccessPolicy: function(articles, access_policy) {
+      var articlesFilteredByAccess = [];
+      var self = this;
+      for (var i = 0; i < articles.length; i++) {
+        (function(i) {
+          self.ajax('getSectionAccessPolicy', articles[i].section_id).done(function(res) {
+            if ( res.access_policy.viewable_by === access_policy ) {
+              console.log('pushin', articles[i]); 
+              articlesFilteredByAccess.push(articles[i]);
+            }
+            console.log('filtered Arts', articlesFilteredByAccess);
+          })
+        })(i);
+      }
+      return articlesFilteredByAccess;
     },
 
     searchHelpCenterDone: function(data) {
       var results = data.results;
+      var whoCanView;
+      this.$('#access-dropdown').val() === "Agents and managers" ? whoCanView = 'staff' : whoCanView = 'signed_in_users';
+      var self = this;
+
+      var articlesFilteredByAccess = this.filterByAccessPolicy(results, whoCanView);
+      console.log('list to format', articlesFilteredByAccess);
+ 
       if (this.isMultibrand) {
         var brand = this.$('.brand-filter').zdSelectMenu('value');
         if (brand !== 'any') {
@@ -221,7 +264,9 @@
           });
         }
       }
-      this.renderList(this.formatHcEntries(results));
+      setTimeout(function() {
+        self.renderList(self.formatHcEntries(articlesFilteredByAccess));
+      }, 500);
     },
 
     searchWebPortalDone: function(data){
@@ -249,6 +294,7 @@
     },
 
     formatEntries: function(topics, result){
+
       var entries = _.inject(topics, function(memo, topic){
         var forum = _.find(result.forums, function(f) { return f.id == topic.forum_id; });
         var entry = {
@@ -270,8 +316,10 @@
     },
 
     formatHcEntries: function(result){
+
       var slicedResult = result.slice(0, this.numberOfDisplayableEntries());
       var entries = _.inject(slicedResult, function(memo, entry) {
+
         var title = entry.name,
             subdomain;
 
