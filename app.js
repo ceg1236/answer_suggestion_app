@@ -2,8 +2,6 @@
   return {
     defaultState: 'spinner',
     defaultNumberOfEntriesToDisplay: 10,
-    categories: {},
-    access_policy: {},
     urlRegex: /^https?:\/\/[^/]+\//,
     zendeskRegex: /^https:\/\/(.*?)\.(?:zendesk|zd-(?:dev|master|staging))\.com\//,
     DEFAULT_LOGO_URL: '/images/logo_placeholder.png',
@@ -132,6 +130,7 @@
 
     created: function() {
       this.isMultibrand = false;
+      this.categories ={};
       this.ajax('getBrands');
       this.ajax('getCategories');
       this.$('.custom-search').before(
