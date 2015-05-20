@@ -100,7 +100,7 @@
         return {
           url: '/api/v2/help_center/categories.json',
           type: 'GET',
-        }
+        };
       },
 
       searchWebPortal: function(query){
@@ -217,16 +217,9 @@
     },
 
     getSectionAccessPolicyDone: function(data) {
-      // var whoCanView;
-      // var sectionsFilteredByAccess = [];
-      // console.log('secFilAcc', sectionsFilteredByAccess);
-      // this.$('#access-dropdown').val() === "Agents and managers" ? whoCanView = 'staff' : whoCanView = 'signed_in_users';
 
-      // // if (this.isAgentOnlyContent(data)) { this.renderAgentOnlyAlert(); }
-      // if (data.access_policy.viewable_by === whoCanView) {
-      //   console.log('access match!');
-      //   return true;
-      // }
+      if (this.isAgentOnlyContent(data)) { this.renderAgentOnlyAlert(); }
+
     },
 
     filterByAccessPolicy: function(articles, access_policy) {
@@ -240,7 +233,7 @@
               articlesFilteredByAccess.push(articles[i]);
             }
             console.log('filtered Arts', articlesFilteredByAccess);
-          })
+          });
         })(i);
       }
       return articlesFilteredByAccess;
@@ -248,7 +241,7 @@
 
     searchHelpCenterDone: function(data) {
       var results = data.results;
-      var whoCanView = this.$('#access-dropdown').val();
+      var whoCanView = this.$('.access-dropdown').val();
       var access_policy;
       var articlesFilteredByAccess;
       var self = this;
@@ -261,6 +254,10 @@
           });
         }
       }
+
+      this.promise(function(done, fail) {
+
+      });
 
       if (whoCanView === "Anyone") {
         console.log('whoCanView1', whoCanView);
@@ -355,7 +352,7 @@
 
     processSearchFromInput: function() {
       var query = this.removePunctuation(this.$('.custom-search input').val());
-      var filter = this.$('#category-dropdown').val();
+      var filter = this.$('.category-dropdown').val();
       if (query && query.length) { this.search(query, filter); }
     },
 

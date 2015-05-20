@@ -1,6 +1,6 @@
 <div class="categories-filter">
   <h5>Category Filter</h5>
-    <select id="category-dropdown">
+    <select class="category-dropdown">
       <option>All</option>
         {{#each categories}}
       <option>{{@key}}</option>
