@@ -19,6 +19,7 @@
       'getHcArticle.done': 'getHcArticleDone',
       'getSectionAccessPolicy.done': 'getSectionAccessPolicyDone',
       'settings.done': 'settingsDone',
+      'getLabels.done' : 'getLabelsDone',
 
       // DOM EVENTS
       'zd_ui_change .brand-filter': 'processSearchFromInput',
@@ -99,8 +100,15 @@
 
         return {
           url: '/api/v2/help_center/categories.json',
-          type: 'GET',
+          type: 'GET'
         };
+      },
+
+      getLabels: function(id) {
+        return {
+          url: '/api/v2/help_center/articles/'+id+'/labels.json',
+          type: 'GET'
+        }
       },
 
       searchWebPortal: function(query){
@@ -222,24 +230,42 @@
 
     },
 
+    getLabelsDone: function(data) {
+
+      console.log('getLabelsDone', data);
+    },
+
     filterByAccessPolicy: function(articles, access_policy) {
       var articlesFilteredByAccess = [];
       var self = this;
-      for (var i = 0; i < articles.length; i++) {
-        (function(i) {
-          self.ajax('getSectionAccessPolicy', articles[i].section_id).done(function(res) {
-            if ( res.access_policy.viewable_by === access_policy ) {
-              console.log('pushin', articles[i]); 
-              articlesFilteredByAccess.push(articles[i]);
-            }
-            console.log('filtered Arts', articlesFilteredByAccess);
-          });
-        })(i);
-      }
-      return articlesFilteredByAccess;
+
+      //zat validate doesn't like functions 
+      // for (var i = 0; i < articles.length; i++) {
+      //   (function(i) {
+      //     self.ajax('getSectionAccessPolicy', articles[i].section_id).done(function(res) {
+      //       if ( res.access_policy.viewable_by === access_policy ) {
+      //         console.log('pushin', articles[i]); 
+      //         articlesFilteredByAccess.push(articles[i]);
+      //       }
+      //       console.log('filtered Arts', articlesFilteredByAccess);
+      //     });
+      //   })(i);
+      // }
+      // return articlesFilteredByAccess;
     },
 
     searchHelpCenterDone: function(data) {
+      // console.log('orgs', this.ticket().organization() );
+      // console.log('groups', this.ticket().assignee().group().name() );
+      // console.log('tags', this.ticket().tags());
+      console.log('searchHCDone', data);
+
+      if (data.results) {
+        console.log('id', data.results[0].id);
+        this.ajax('getLabels', data.results[0].id);
+        
+      }
+
       var results = data.results;
       var whoCanView = this.$('.access-dropdown').val();
       var access_policy;
@@ -260,10 +286,9 @@
       });
 
       if (whoCanView === "Anyone") {
-        console.log('whoCanView1', whoCanView);
+
         this.renderList(this.formatHcEntries(results));
       } else {
-        console.log('whoCanView2', whoCanView);
 
         whoCanView === "Agents and managers" ? access_policy = 'staff' : access_policy = 'signed_in_users';
         articlesFilteredByAccess = this.filterByAccessPolicy(results, access_policy);
