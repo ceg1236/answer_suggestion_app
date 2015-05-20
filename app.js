@@ -249,13 +249,11 @@
 
     searchHelpCenterDone: function(data) {
       var results = data.results;
-      var whoCanView;
-      this.$('#access-dropdown').val() === "Agents and managers" ? whoCanView = 'staff' : whoCanView = 'signed_in_users';
+      var whoCanView = this.$('#access-dropdown').val();
+      var access_policy;
+      var articlesFilteredByAccess;
       var self = this;
 
-      var articlesFilteredByAccess = this.filterByAccessPolicy(results, whoCanView);
-      console.log('list to format', articlesFilteredByAccess);
- 
       if (this.isMultibrand) {
         var brand = this.$('.brand-filter').zdSelectMenu('value');
         if (brand !== 'any') {
@@ -264,9 +262,20 @@
           });
         }
       }
-      setTimeout(function() {
-        self.renderList(self.formatHcEntries(articlesFilteredByAccess));
-      }, 500);
+
+      if (whoCanView === "Anyone") {
+        console.log('whoCanView1', whoCanView);
+        this.renderList(this.formatHcEntries(results));
+      } else {
+        console.log('whoCanView2', whoCanView);
+
+        whoCanView === "Agents and managers" ? access_policy = 'staff' : access_policy = 'signed_in_users';
+        articlesFilteredByAccess = this.filterByAccessPolicy(results, access_policy);
+        setTimeout(function() {
+          self.renderList(self.formatHcEntries(articlesFilteredByAccess));
+        }, 500);
+      }
+      
     },
 
     searchWebPortalDone: function(data){
