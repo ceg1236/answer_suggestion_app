@@ -25,6 +25,7 @@
       'dragend,click a.copy_link': 'copyLink',
       'dragend a.main': 'copyLink',
       'click .toggle-app': 'toggleAppContainer',
+      'click .content-body span':'toggleContent',
       'keyup .custom-search input': function(event){
         if (event.keyCode === 13) { return this.processSearchFromInput(); }
       },
@@ -387,6 +388,14 @@
 
     subjectSearchQuery: function(s){
       return this.removeStopWords(this.ticket().subject(), this.stop_words());
+    },
+
+    toggleContent: function(e) {
+
+      var sectionName = e.target.innerText;
+      var target = sectionName.indexOf(' ') === -1 ? 
+      sectionName.slice(0).toLowerCase() : sectionName.slice(0, sectionName.indexOf(' ') ).toLowerCase();
+      this.$(e.currentTarget).parent().siblings('div.'+target+'-content').toggle();
     },
 
     toggleAppContainer: function(){
