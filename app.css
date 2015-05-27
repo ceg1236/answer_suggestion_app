@@ -65,3 +65,11 @@ section div.well.well-small {
   width: 14px;
   vertical-align: bottom;
 }
+
+.content-body div {
+  display:none;
+}
+
+p span {
+  cursor: pointer;
+}
